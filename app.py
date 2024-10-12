@@ -1,8 +1,11 @@
 from flask import Flask, request, jsonify
+from openai import OpenAI
 
 from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
+
+client = OpenAI()
 
 school_info = {
     "courses": "Our school offers Math, Science, and Computer Science.",
@@ -10,23 +13,31 @@ school_info = {
     "fees": "The annual fee is $2000.",
 }
 
+def generate_answer(question):
+    # completion = client.chat.completions.create(
+    #     model="babbage-002",
+    #     messages=[
+    #         {"role": "user", "content": "Explain RAG in ML"}
+    #     ]
+    # )
+
+    # return completion.choices[0].message
+    if question == 'how can i begin to prepare to file my taxes':
+        return "1. Applied for an SSN (or ITIN) 2. Requeste for the tax form  from the HR"
+
+    return "Sorry, I can't quite get that"
+
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
     incoming_msg = request.values.get("Body", "").strip().lower()
     resp = MessagingResponse()
     msg = resp.message()
 
-    # Basic logic to respond based on input
-    if "courses" in incoming_msg:
-        response = school_info["courses"]
-    elif "calendar" in incoming_msg:
-        response = school_info["calendar"]
-    elif "fees" in incoming_msg:
-        response = school_info["fees"]
-    else:
-        response = "I'm sorry, I don't understand your question. Try asking about courses, calendar, or fees."
+    answer = generate_answer(incoming_msg.lower())
+
+    print(answer)
     
-    msg.body(response)
+    msg.body(answer)
     return str(resp)
 
 if __name__ == "__main__":
